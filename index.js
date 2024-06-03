@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
+const { ObjectId } = require("mongodb");
+require("dotenv").config();
 const port = process.env.PORT || 5000;
 
 //middlewares
@@ -24,16 +26,26 @@ async function run() {
   try {
     // await client.connect();
     const postCollection = client.db("Forum").collection("posts");
+    const commentCollection = client.db("Forum").collection("comments");
+    const reportCollection = client.db("Forum").collection("reports");
 
+    // ! Posts
     app.get("/posts", async (req, res) => {
       const result = await postCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/posts/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await postCollection.findOne(query);
       res.send(result);
     });
 
     app.get("/posts/:email", async (req, res) => {
       const email = req.params.email;
       const query = { "author.email": email };
-      const result = await volunteerCollection.find(query).toArray();
+      const result = await postCollection.find(query).toArray();
       res.send(result);
     });
 
@@ -41,6 +53,28 @@ async function run() {
       const item = req.body;
       console.log(item);
       const result = await postCollection.insertOne(item);
+      res.send(result);
+    });
+
+    // ! Comments
+
+    app.get("/comments", async (req, res) => {
+      const result = await commentCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/comments", async (req, res) => {
+      const item = req.body;
+      console.log(item);
+      const result = await commentCollection.insertOne(item);
+      res.send(result);
+    });
+
+    // ! reports
+    app.post("/reports", async (req, res) => {
+      const item = req.body;
+      console.log(item);
+      const result = await reportCollection.insertOne(item);
       res.send(result);
     });
 
