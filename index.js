@@ -81,7 +81,6 @@ async function run() {
     
 
     // ! Comments
-
     app.get("/comments", async (req, res) => {
       const result = await commentCollection.find().toArray();
       res.send(result);
@@ -95,6 +94,10 @@ async function run() {
     });
 
     // ! reports
+    app.get("/reports", async (req, res) => {
+      const result = await reportCollection.find().toArray();
+      res.send(result);
+    });
     app.post("/reports", async (req, res) => {
       const item = req.body;
       console.log(item);
