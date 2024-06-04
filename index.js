@@ -28,6 +28,7 @@ async function run() {
     const postCollection = client.db("Forum").collection("posts");
     const commentCollection = client.db("Forum").collection("comments");
     const reportCollection = client.db("Forum").collection("reports");
+    const voteCollection = client.db("Forum").collection("votes");
 
     // ! Posts
     app.get("/posts", async (req, res) => {
@@ -55,6 +56,29 @@ async function run() {
       const result = await postCollection.insertOne(item);
       res.send(result);
     });
+
+    // ! Get all posts data from db for pagination
+    app.get("/posts", async (req, res) => {
+      const size = parseInt(req.query.size) || 10;
+      console.log(size);
+      const page = parseInt(req.query.page) || 6;
+      const search = req.query.search || "";
+      const filter = req.query.filter || "";
+      let query = {
+        title: { $regex: search, $options: "i" },
+      };
+      if (filter) query.category = filter;
+      let options = {};
+      const result = await postCollection
+        .find(query, options)
+        .skip((page - 1) * size)
+        .limit(size)
+        .toArray();
+      res.send(result);
+    });
+
+    // ! vote count
+    
 
     // ! Comments
 
