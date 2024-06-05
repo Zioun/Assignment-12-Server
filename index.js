@@ -28,7 +28,8 @@ async function run() {
     const postCollection = client.db("Forum").collection("posts");
     const commentCollection = client.db("Forum").collection("comments");
     const reportCollection = client.db("Forum").collection("reports");
-    const voteCollection = client.db("Forum").collection("votes");
+    const announcementCollection = client.db("Forum").collection("announcements");
+    const tagCollection = client.db("Forum").collection("tags");
 
     // ! Posts
     app.get("/posts", async (req, res) => {
@@ -93,6 +94,18 @@ async function run() {
       res.send(result);
     });
 
+    // ! tags
+    app.get("/tags", async (req, res) => {
+      const result = await tagCollection.find().toArray();
+      res.send(result);
+    });
+    app.post("/tags", async (req, res) => {
+      const item = req.body;
+      console.log(item);
+      const result = await tagCollection.insertOne(item);
+      res.send(result);
+    });
+
     // ! reports
     app.get("/reports", async (req, res) => {
       const result = await reportCollection.find().toArray();
@@ -102,6 +115,18 @@ async function run() {
       const item = req.body;
       console.log(item);
       const result = await reportCollection.insertOne(item);
+      res.send(result);
+    });
+
+    // ! announcement
+    app.get("/announcement", async (req, res) => {
+      const result = await announcementCollection.find().toArray();
+      res.send(result);
+    });
+    app.post("/announcement", async (req, res) => {
+      const item = req.body;
+      console.log(item);
+      const result = await announcementCollection.insertOne(item);
       res.send(result);
     });
 
