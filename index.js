@@ -25,11 +25,27 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // await client.connect();
+    const userCollection = client.db("Forum").collection("users");
     const postCollection = client.db("Forum").collection("posts");
     const commentCollection = client.db("Forum").collection("comments");
     const reportCollection = client.db("Forum").collection("reports");
     const announcementCollection = client.db("Forum").collection("announcements");
     const tagCollection = client.db("Forum").collection("tags");
+
+
+    // !users
+    app.get("/users", async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/users", async (req, res) => {
+      const item = req.body;
+      console.log(item);
+      const result = await userCollection.insertOne(item);
+      res.send(result);
+    });
+
 
     // ! Posts
     app.get("/posts", async (req, res) => {
