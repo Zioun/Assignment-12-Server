@@ -29,13 +29,21 @@ async function run() {
     const postCollection = client.db("Forum").collection("posts");
     const commentCollection = client.db("Forum").collection("comments");
     const reportCollection = client.db("Forum").collection("reports");
-    const announcementCollection = client.db("Forum").collection("announcements");
+    const announcementCollection = client
+      .db("Forum")
+      .collection("announcements");
     const tagCollection = client.db("Forum").collection("tags");
-
 
     // !users
     app.get("/users", async (req, res) => {
       const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/users", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await userCollection.findOne(query);
       res.send(result);
     });
 
@@ -46,6 +54,30 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/users/:id/role", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: "admin",
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    app.patch("/users/:id/restriction", async (req, res) => {
+      const id = req.params.id;
+      const { restriction } = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          restriction: restriction,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
     // ! Posts
     app.get("/posts", async (req, res) => {
@@ -95,7 +127,6 @@ async function run() {
     });
 
     // ! vote count
-    
 
     // ! Comments
     app.get("/comments", async (req, res) => {
