@@ -33,6 +33,10 @@ async function run() {
       .db("Forum")
       .collection("announcements");
     const tagCollection = client.db("Forum").collection("tags");
+    const notificationCollection = client
+      .db("Forum")
+      .collection("notifications");
+    const voteCollection = client.db("Forum").collection("votes");
 
     // !users
     app.get("/users", async (req, res) => {
@@ -127,6 +131,60 @@ async function run() {
     });
 
     // ! vote count
+    app.get("/votes", async (req, res) => {
+      const result = await voteCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.patch("/votes", async (req, res) => {
+      const { postId, email, upVote, downVote } = req.body;
+    
+      try {
+        // Find the existing vote for the user on the post
+        const existingVote = await voteCollection.findOne({
+          postId: postId,
+          email: email,
+        });
+    
+        // If there's an existing vote, update it
+        if (existingVote) {
+          // Update the existing vote
+          await voteCollection.updateOne(
+            { _id: existingVote._id },
+            { $set: { upVote: upVote, downVote: downVote } }
+          );
+    
+          // Update vote counts based on the change
+          const upVoteIncrement = upVote ? 1 : -1;
+          const downVoteIncrement = downVote ? 1 : -1;
+          await postCollection.updateOne(
+            { _id: postId },
+            { $inc: { upVote: upVoteIncrement, downVote: downVoteIncrement } }
+          );
+        } else {
+          // If there's no existing vote, create a new one
+          await voteCollection.insertOne({
+            postId: postId,
+            email: email,
+            upVote: upVote,
+            downVote: downVote,
+          });
+    
+          // Update vote counts based on the new vote
+          const upVoteIncrement = upVote ? 1 : 0;
+          const downVoteIncrement = downVote ? 1 : 0;
+          await postCollection.updateOne(
+            { _id: postId },
+            { $inc: { upVote: upVoteIncrement, downVote: downVoteIncrement } }
+          );
+        }
+    
+        res.send({ success: true });
+      } catch (error) {
+        console.error("Error:", error);
+        res.status(500).send({ message: "Server error", success: false });
+      }
+    });
 
     // ! Comments
     app.get("/comments", async (req, res) => {
@@ -139,6 +197,54 @@ async function run() {
       console.log(item);
       const result = await commentCollection.insertOne(item);
       res.send(result);
+    });
+
+    app.delete("/comments/:id", async (req, res) => {
+      const id = req.params.id;
+      try {
+        const result = await commentCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        res.json({ deletedCount: result.deletedCount });
+      } catch (error) {
+        console.error("Error deleting comment:", error);
+        res.status(500).json({ message: "Error deleting comment" });
+      }
+    });
+
+    app.delete("/reports/:id", async (req, res) => {
+      const id = req.params.id;
+      try {
+        const result = await reportCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        res.json({ deletedCount: result.deletedCount });
+      } catch (error) {
+        console.error("Error deleting report:", error);
+        res.status(500).json({ message: "Error deleting report" });
+      }
+    });
+
+    // !notification
+    app.get("/notifications", async (req, res) => {
+      const result = await notificationCollection.find().toArray();
+      res.send(result);
+    });
+    app.patch("/notifications", async (req, res) => {
+      const { notifyId, email } = req.body;
+      console.log(req.body);
+
+      const existingNotification = await notificationCollection.findOne({
+        notifyId,
+        email,
+      });
+
+      if (existingNotification) {
+        res.send({ message: "Notification already sent", success: false });
+      } else {
+        const result = await notificationCollection.insertOne(req.body);
+        res.send({ result, success: true });
+      }
     });
 
     // ! tags
