@@ -46,18 +46,18 @@ async function run() {
 
     app.get("/users/:email", async (req, res) => {
       try {
-          const email = req.params.email; // Use req.params instead of req.query
-          const query = { email: email };
-          const result = await userCollection.findOne(query);
-          if (!result) {
-              return res.status(404).send({ message: "User not found" });
-          }
-          res.status(200).send(result);
+        const email = req.params.email; // Use req.params instead of req.query
+        const query = { email: email };
+        const result = await userCollection.findOne(query);
+        if (!result) {
+          return res.status(404).send({ message: "User not found" });
+        }
+        res.status(200).send(result);
       } catch (error) {
-          console.error("Error fetching user data:", error);
-          res.status(500).send({ message: "Internal Server Error" });
+        console.error("Error fetching user data:", error);
+        res.status(500).send({ message: "Internal Server Error" });
       }
-  });
+    });
 
     app.post("/users", async (req, res) => {
       const item = req.body;
@@ -65,7 +65,6 @@ async function run() {
       const result = await userCollection.insertOne(item);
       res.send(result);
     });
-    
 
     app.patch("/users/:id/role", async (req, res) => {
       const id = req.params.id;
@@ -145,7 +144,10 @@ async function run() {
       try {
         const votes = await voteCollection.find({ postId }).toArray();
         const totalUpVotes = votes.reduce((acc, vote) => acc + vote.upVote, 0);
-        const totalDownVotes = votes.reduce((acc, vote) => acc + vote.downVote, 0);
+        const totalDownVotes = votes.reduce(
+          (acc, vote) => acc + vote.downVote,
+          0
+        );
         res.send({ totalUpVotes, totalDownVotes });
       } catch (error) {
         console.error("Error fetching votes:", error);
@@ -153,18 +155,16 @@ async function run() {
       }
     });
 
-    
-
     app.patch("/votes", async (req, res) => {
       const { postId, email, upVote, downVote } = req.body;
-    
+
       try {
         // Find the existing vote for the user on the post
         const existingVote = await voteCollection.findOne({
           postId: postId,
           email: email,
         });
-    
+
         // If there's an existing vote, update it
         if (existingVote) {
           // Update the existing vote
@@ -172,7 +172,7 @@ async function run() {
             { _id: existingVote._id },
             { $set: { upVote: upVote, downVote: downVote } }
           );
-    
+
           // Update vote counts based on the change
           const upVoteIncrement = upVote ? 1 : -1;
           const downVoteIncrement = downVote ? 1 : -1;
@@ -188,7 +188,7 @@ async function run() {
             upVote: upVote,
             downVote: downVote,
           });
-    
+
           // Update vote counts based on the new vote
           const upVoteIncrement = upVote ? 1 : 0;
           const downVoteIncrement = downVote ? 1 : 0;
@@ -197,7 +197,7 @@ async function run() {
             { $inc: { upVote: upVoteIncrement, downVote: downVoteIncrement } }
           );
         }
-    
+
         res.send({ success: true });
       } catch (error) {
         console.error("Error:", error);
