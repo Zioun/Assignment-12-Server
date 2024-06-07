@@ -44,12 +44,20 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/users", async (req, res) => {
-      const email = req.query.email;
-      const query = { email: email };
-      const result = await userCollection.findOne(query);
-      res.send(result);
-    });
+    app.get("/users/:email", async (req, res) => {
+      try {
+          const email = req.params.email; // Use req.params instead of req.query
+          const query = { email: email };
+          const result = await userCollection.findOne(query);
+          if (!result) {
+              return res.status(404).send({ message: "User not found" });
+          }
+          res.status(200).send(result);
+      } catch (error) {
+          console.error("Error fetching user data:", error);
+          res.status(500).send({ message: "Internal Server Error" });
+      }
+  });
 
     app.post("/users", async (req, res) => {
       const item = req.body;
@@ -57,6 +65,7 @@ async function run() {
       const result = await userCollection.insertOne(item);
       res.send(result);
     });
+    
 
     app.patch("/users/:id/role", async (req, res) => {
       const id = req.params.id;
@@ -131,10 +140,20 @@ async function run() {
     });
 
     // ! vote count
-    app.get("/votes", async (req, res) => {
-      const result = await voteCollection.find().toArray();
-      res.send(result);
+    app.get("/votes/:postId", async (req, res) => {
+      const { postId } = req.params;
+      try {
+        const votes = await voteCollection.find({ postId }).toArray();
+        const totalUpVotes = votes.reduce((acc, vote) => acc + vote.upVote, 0);
+        const totalDownVotes = votes.reduce((acc, vote) => acc + vote.downVote, 0);
+        res.send({ totalUpVotes, totalDownVotes });
+      } catch (error) {
+        console.error("Error fetching votes:", error);
+        res.status(500).send("Internal server error");
+      }
     });
+
+    
 
     app.patch("/votes", async (req, res) => {
       const { postId, email, upVote, downVote } = req.body;
