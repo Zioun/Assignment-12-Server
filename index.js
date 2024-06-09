@@ -120,6 +120,23 @@ async function run() {
       res.send(result);
     });
 
+    app.delete("/posts/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+    
+      try {
+        const result = await postCollection.deleteOne(query);
+        if (result.deletedCount === 1) {
+          res.send({ message: "Successfully deleted one document.", deletedCount: result.deletedCount });
+        } else {
+          res.send({ message: "No documents matched the query. Deleted 0 documents." });
+        }
+      } catch (error) {
+        console.error("Error deleting document:", error);
+        res.status(500).send({ message: "An error occurred while deleting the document." });
+      }
+    });
+
     // ! Get all posts data from db for pagination
     app.get("/posts", async (req, res) => {
       const size = parseInt(req.query.size) || 10;
@@ -220,31 +237,18 @@ async function run() {
       res.send(result);
     });
 
-    app.delete("/comments/:id", async (req, res) => {
-      const id = req.params.id;
+    app.delete("/comments/byPost/:postId", async (req, res) => {
+      const postId = req.params.postId;
       try {
-        const result = await commentCollection.deleteOne({
-          _id: new ObjectId(id),
-        });
+        const result = await commentCollection.deleteMany({ postId: postId });
         res.json({ deletedCount: result.deletedCount });
       } catch (error) {
-        console.error("Error deleting comment:", error);
-        res.status(500).json({ message: "Error deleting comment" });
+        console.error("Error deleting comments:", error);
+        res.status(500).json({ message: "Error deleting comments" });
       }
     });
 
-    app.delete("/reports/:id", async (req, res) => {
-      const id = req.params.id;
-      try {
-        const result = await reportCollection.deleteOne({
-          _id: new ObjectId(id),
-        });
-        res.json({ deletedCount: result.deletedCount });
-      } catch (error) {
-        console.error("Error deleting report:", error);
-        res.status(500).json({ message: "Error deleting report" });
-      }
-    });
+    
 
     // !notification
     app.get("/notifications", async (req, res) => {
@@ -290,6 +294,19 @@ async function run() {
       console.log(item);
       const result = await reportCollection.insertOne(item);
       res.send(result);
+    });
+
+    app.delete("/reports/:id", async (req, res) => {
+      const id = req.params.id;
+      try {
+        const result = await reportCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        res.json({ deletedCount: result.deletedCount });
+      } catch (error) {
+        console.error("Error deleting report:", error);
+        res.status(500).json({ message: "Error deleting report" });
+      }
     });
 
     // ! announcement
