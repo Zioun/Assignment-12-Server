@@ -164,7 +164,7 @@ async function run() {
           .send({ message: "An error occurred while deleting the document." });
       }
     });
-    
+
 
     // ! Get all posts data from db for pagination
     app.get("/posts", async (req, res) => {
@@ -186,6 +186,7 @@ async function run() {
       res.send(result);
     });
 
+    
     // ! vote count
     app.get("/votes/:postId", async (req, res) => {
       const { postId } = req.params;
