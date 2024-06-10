@@ -100,7 +100,7 @@ async function run() {
       }
     });
 
-    
+
     app.patch("/users/:id/restriction", async (req, res) => {
       const id = req.params.id;
       const { restriction } = req.body;
@@ -164,6 +164,7 @@ async function run() {
           .send({ message: "An error occurred while deleting the document." });
       }
     });
+    
 
     // ! Get all posts data from db for pagination
     app.get("/posts", async (req, res) => {
