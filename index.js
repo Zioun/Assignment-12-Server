@@ -80,6 +80,27 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/users/:email/subscription", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const updateDoc = {
+        $set: {
+          subscription: "true",
+        },
+      };
+      try {
+        const result = await userCollection.updateOne(query, updateDoc); // Assuming you have a usersCollection from your database connection
+        if (result.modifiedCount === 1) {
+          res.status(200).send({ message: "Subscription updated successfully" });
+        } else {
+          res.status(404).send({ message: "User not found" });
+        }
+      } catch (error) {
+        res.status(500).send({ message: "Internal Server Error", error });
+      }
+    });
+
+    
     app.patch("/users/:id/restriction", async (req, res) => {
       const id = req.params.id;
       const { restriction } = req.body;
@@ -123,17 +144,24 @@ async function run() {
     app.delete("/posts/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-    
+
       try {
         const result = await postCollection.deleteOne(query);
         if (result.deletedCount === 1) {
-          res.send({ message: "Successfully deleted one document.", deletedCount: result.deletedCount });
+          res.send({
+            message: "Successfully deleted one document.",
+            deletedCount: result.deletedCount,
+          });
         } else {
-          res.send({ message: "No documents matched the query. Deleted 0 documents." });
+          res.send({
+            message: "No documents matched the query. Deleted 0 documents.",
+          });
         }
       } catch (error) {
         console.error("Error deleting document:", error);
-        res.status(500).send({ message: "An error occurred while deleting the document." });
+        res
+          .status(500)
+          .send({ message: "An error occurred while deleting the document." });
       }
     });
 
@@ -248,8 +276,6 @@ async function run() {
       }
     });
 
-    
-
     // !notification
     app.get("/notifications", async (req, res) => {
       const result = await notificationCollection.find().toArray();
@@ -325,24 +351,24 @@ async function run() {
     app.post("/create-payment-intent", async (req, res) => {
       const { price } = req.body;
       const amount = parseInt(price * 100);
-      console.log(amount,"payData");
+      console.log(amount, "payData");
 
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: "usd",
-        payment_method_types: ['card']
+        payment_method_types: ["card"],
       });
-      
+
       res.send({
-        clientSecret: paymentIntent.client_secret
-      })
+        clientSecret: paymentIntent.client_secret,
+      });
     });
 
-    app.post('/payments', async(req, res)=>{
+    app.post("/payments", async (req, res) => {
       const payment = req.body;
       const paymentResult = await paymentCollection.insertOne(payment);
       res.send(paymentResult);
-    })
+    });
 
     app.get("/payments", async (req, res) => {
       const result = await paymentCollection.find().toArray();
